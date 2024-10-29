@@ -15,8 +15,13 @@
       ansible.builtin.file:
         path: "inventory/host_vars/{{ inventory_hostname }}"
         state: directory
-      delegate_to: localhost
+      delegate_to: localhost  
 
+    - name: Create blank 'interfaces.yaml' file
+      ansible.builtin.file:
+        path: "inventory/host_vars/{{ inventory_hostname }}/interfaces.yaml"
+        state: touch
+        
     # - name: Remove hostvars directories if host is removed
     #   ansible.builtin.file:
     #     path: "inventory/host_vars/{{ inventory_hostname }}"
