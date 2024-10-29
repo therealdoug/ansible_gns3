@@ -50,6 +50,9 @@
               - address: "{{ item.address }}"
         state: merged
       loop: "{{ interfaces }}"
+      tags:
+        - interfaces
+        
 
     - name: Enable Interfaces and set description
       cisco.ios.ios_interfaces:
@@ -59,6 +62,8 @@
             description: "{{ item.description | default('UPDATE_ME') }}"
         state: merged
       loop: "{{ interfaces }}"
+      tags:
+        - interfaces
 
     - name: Configure Prefix Lists for Infrastructure IPs
       cisco.ios.ios_prefix_lists:
@@ -146,3 +151,5 @@
         src: templates/router_bgp.j2
         diff_against: running
         replace: line
+      tags:
+        - bgp
