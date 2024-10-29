@@ -3,10 +3,12 @@ interfaces:
   - name: GigabitEthernet1/0
     description: "WAN|1G|R1|Gi2/0"
     address: 172.31.254.3/31
+    bgp_enabled: true
   - name: GigabitEthernet2/0
     description: "WAN|1G|R2|Gi2/0"
     address: 172.31.254.5/31
+    bgp_enabled: true
   - name: GigabitEthernet3/0
     description: "WAN|1G|R2|Gi2/0"
     address: 172.31.254.10/31
-    ospf: true
+    bgp_enabled: true
