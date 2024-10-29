@@ -1,0 +1,13 @@
+---
+interfaces:
+  - name: GigabitEthernet1/0
+    description: WAN|1G|R6|Gi1/0
+    address: 172.31.254.14/31
+  - name: Ethernet6/0
+    address: 172.31.254.11/31
+    description: WAN|1G|R1|Gi6/0
+    remote_asn: 400065000
+  - name: Ethernet6/1
+    address: 172.31.254.13/31
+    description: WAN|1G|R2|Gi6/0
+    remote_asn: 400065000

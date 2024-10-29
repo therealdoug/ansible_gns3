@@ -1,0 +1,12 @@
+---
+interfaces:
+  - name: GigabitEthernet1/0
+    description: "WAN|1G|R1|Gi2/0"
+    address: 172.31.254.7/31
+  - name: GigabitEthernet2/0
+    description: "WAN|1G|R2|Gi2/0"
+    address: 172.31.254.9/31
+  - name: GigabitEthernet3/0
+    description: "WAN|1G|R3|Gi2/0"
+    address: 172.31.254.11/31
+    ospf: true

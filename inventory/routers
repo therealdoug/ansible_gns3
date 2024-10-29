@@ -1,0 +1,18 @@
+---
+all:
+  vars:
+    ansible_network_os: cisco.ios.ios
+asn400065000:
+  hosts:
+    R1:
+    R2:
+    R3:
+    R4:
+asn400065100:
+  hosts:
+    R5:
+    R6:
+routers:
+  children:
+    asn400065000:
+    asn400065100:

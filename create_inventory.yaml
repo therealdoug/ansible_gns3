@@ -1,0 +1,30 @@
+---
+- name: Create Inventory group and host vars
+  # hosts: asn400065000
+  hosts: all
+  gather_facts: false
+  connection: local
+  become: false
+
+  tasks:
+    - name: debug
+      debug:
+        var: inventory_hostname
+
+    - name: Create hostvars directories
+      ansible.builtin.file:
+        path: "inventory/host_vars/{{ inventory_hostname }}"
+        state: directory
+      delegate_to: localhost
+
+    # - name: Remove hostvars directories if host is removed
+    #   ansible.builtin.file:
+    #     path: "inventory/host_vars/{{ inventory_hostname }}"
+    #     state: absent
+    #   when: inventory_hostname not in hostvars | dict2items | map(attribute='key')
+    #   delegate_to: localhost
+
+    - name: Create hostvars files in each directory
+      ansible.builtin.template:
+        src: templates/inventory_router.j2
+        dest: "inventory/host_vars/{{ inventory_hostname }}/{{ inventory_hostname }}"

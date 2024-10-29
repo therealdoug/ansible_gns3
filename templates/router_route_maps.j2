@@ -1,0 +1,18 @@
+ip prefix-list pl_0_0_0_0-0 seq 10 permit 0.0.0.0/0
+ description Default Route
+!
+ip prefix-list pl_0_0_0_0-0_le32 seq 10 permit 0.0.0.0/0 le 32
+ description All Routes
+!
+ip prefix-list pl_172_31_254_0-24 seq 10 permit 172.31.254.0/24 le 32
+ description P2P Network
+!
+ip prefix-list pl_172_31_255_0-24 seq 10 permit 172.31.255.0/24 le 32
+ description Loopback Network
+!
+ip prefix-list pl_RFC1918-10 seq 10 permit 10.0.0.0/8 le 32
+!
+ip prefix-list pl_RFC1918-172 seq 10 permit 172.16.0.0/12 le 32
+!
+ip prefix-list pl_RFC1918-192 seq 10 permit 192.168.0.0/16 le 32
+!

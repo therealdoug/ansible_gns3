@@ -1,0 +1,4 @@
+---
+{% set rid = inventory_hostname | regex_replace('[a-zA-z]+(\\d+)', '\\1') %}
+router_id: {{ loopback_network | ansible.utils.ipaddr(rid) | ansible.utils.ipaddr('address') }}
+ansible_host: {{ inventory_hostname }}.lan

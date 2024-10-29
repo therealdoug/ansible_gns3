@@ -1,0 +1,148 @@
+---
+- name: Create Cisco Router Template
+  # hosts: asn400065000
+  hosts: all
+  gather_facts: false
+  connection: ansible.netcommon.network_cli
+  become: false
+
+  tasks:
+
+    - name: Jinja Template
+      ansible.builtin.template:
+        src: templates/router.j2
+        dest: configs/{{ inventory_hostname }}_running_config.cfg
+      delegate_to: localhost
+
+    - name: "Enable CDP for neighbor disovery [HACK - cause cdp isn't in the module :rolleyes: ]"
+      cisco.ios.ios_command:
+        commands:
+          - conf t
+          - cdp run
+          - end
+
+    - name: Disable Un-needed Services
+      cisco.ios.ios_service:
+        config:
+          compress_config: true
+          tcp_small_servers:
+            enable: false
+          udp_small_servers:
+            enable: false
+
+    - name: Configure Router Loopback Address for Routing
+      cisco.ios.ios_l3_interfaces:
+        config:
+          - name: FastEthernet0/0
+            ipv4:
+              - dhcp:
+                  enable: true
+          - name: "{{ router_id_interface }}"
+            ipv4:
+              - address: "{{ router_id | ansible.utils.ipaddr('host') }}"
+        state: merged
+
+    - name: Loop over other interfaces
+      cisco.ios.ios_l3_interfaces:
+        config:
+          - name: "{{ item.name }}"
+            ipv4:
+              - address: "{{ item.address }}"
+        state: merged
+      loop: "{{ interfaces }}"
+
+    - name: Enable Interfaces and set description
+      cisco.ios.ios_interfaces:
+        config:
+          - name: "{{ item.name }}"
+            enabled: true
+            description: "{{ item.description | default('UPDATE_ME') }}"
+        state: merged
+      loop: "{{ interfaces }}"
+
+    - name: Configure Prefix Lists for Infrastructure IPs
+      cisco.ios.ios_prefix_lists:
+        config:
+          - afi: ipv4
+            prefix_lists:
+              - name: pl_172_31_255_0-24_le32
+                description: Loopback Addresses
+                entries:
+                  - action: permit
+                    prefix: 172.31.255.0/24
+                    le: 32
+                    sequence: 10
+              - name: pl_172_31_254_0-24_le32
+                description: P2P Addresses
+                entries:
+                  - action: permit
+                    prefix: 172.31.254.0/24
+                    le: 32
+                    sequence: 10
+        state: merged
+
+    - name: Configure OSPF Route Maps to be used to distribute only Infra IPs
+      cisco.ios.ios_route_maps:
+        config:
+          - route_map: redis_connected_ospf
+            entries:
+              - sequence: 10
+                action: permit
+                match:
+                  ip:
+                    address:
+                      prefix_lists:
+                        - pl_172_31_254_0-24_le32
+                        - pl_172_31_255_0-24_le32
+        state: merged
+
+    # - name: Configure OSPF
+    #   cisco.ios.ios_ospfv2:
+    #     config:
+    #       processes:
+    #         - process_id: "{{ ospf_pid }}"
+    #           areas:
+    #             - area_id: "{{ ospf_area }}"
+    #           router_id: "{{ router_id }}"
+    #     state: merged
+
+    # - name: Configure redistribution of connected routes into ospf [HACK]
+    #   cisco.ios.ios_command:
+    #     commands:
+    #       - "conf t"
+    #       - "router ospf {{ ospf_pid }}"
+    #       - "redistribute connected subnets route-map redis_connected_ospf"
+    #       - "end"
+
+    # - name: Enable OSPF on Interfaces
+    #   cisco.ios.ios_ospf_interfaces:
+    #     config:
+    #       - name: "{{ item.name }}"
+    #         address_family:
+    #           - afi: ipv4
+    #             process:
+    #               id: "{{ ospf_pid }}"
+    #               area_id: "{{ ospf_area }}"
+    #             network:
+    #               point_to_point: true
+    #     state: merged
+    #   loop: "{{ interfaces | selectattr('ospf', 'defined') }}"
+
+    # - name: Configure BGP
+    #   cisco.ios.ios_bgp_global:
+    #     config:
+    #       as_number: "{{ local_asn }}"
+    #       bgp:
+    #         router_id:
+    #           address: "{{ router_id }}"
+    #         log_neighbor_changes: true
+    #       redistribute:
+    #         - connected:
+    #             set: true
+    #     state: replaced
+
+    - name: BGP
+      cisco.ios.ios_config:
+        src: templates/router_bgp.j2
+        diff_against: running
+        replace: line

@@ -1,0 +1,6 @@
+---
+local_asn: 400065100
+router_id_interface: Loopback1
+mgmt_interface: FastEthernet0/0
+ospf_pid: 100
+ospf_area: 10
