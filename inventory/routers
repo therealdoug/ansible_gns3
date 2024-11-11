@@ -12,7 +12,11 @@ asn400065100:
   hosts:
     R5:
     R6:
+asn400065200:
+  hosts:
+    R7:
 routers:
   children:
     asn400065000:
     asn400065100:
+    asn400065200:

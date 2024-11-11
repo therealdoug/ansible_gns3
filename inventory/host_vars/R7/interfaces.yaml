@@ -1,0 +1,12 @@
+---
+interfaces:
+  - name: GigabitEthernet1/0
+    description: WAN|1G|R1|Gi6/2
+    address: 172.31.254.21/31
+    remote_asn: 400065000
+    ebgp_enabled: true
+  - name: GigabitEthernet2/0
+    description: WAN|1G|R2|Gi6/2
+    address: 172.31.254.23/31
+    remote_asn: 400065000
+    ebgp_enabled: true
