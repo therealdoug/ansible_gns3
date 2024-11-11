@@ -1,7 +1,7 @@
 router bgp {{ local_asn }}
  bgp router-id {{ router_id }}
  bgp log-neighbor-changes
-{% for interface in interfaces | selectattr('bgp_enabled', 'defined') %}
+{% for interface in interfaces | selectattr('ebgp_enabled', 'defined') %}
  neighbor {{ interface.address | ansible.utils.ipaddr('peer') }} remote-as {{ interface.remote_asn | default(local_asn) }}
  neighbor {{ interface.address | ansible.utils.ipaddr('peer') }} update-source {{ interface.name }}
  neighbor {{ interface.address | ansible.utils.ipaddr('peer') }} description {{ interface.description }}
@@ -9,7 +9,7 @@ router bgp {{ local_asn }}
  !
  address-family ipv4
   redistribute connected
-{% for interface in interfaces | selectattr('bgp_enabled', 'defined') %}
+{% for interface in interfaces | selectattr('ebgp_enabled', 'defined') %}
   neighbor {{ interface.address | ansible.utils.ipaddr('peer') }} activate
   neighbor {{ interface.address | ansible.utils.ipaddr('peer') }} send-community both
   neighbor {{ interface.address | ansible.utils.ipaddr('peer') }} soft-reconfiguration inbound
