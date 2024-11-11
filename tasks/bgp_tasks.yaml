@@ -1,0 +1,123 @@
+---
+- name: Enable new community format
+  cisco.ios.ios_config:
+    lines:
+      - "ip bgp-community new-format"
+  tags:
+    - bgp
+    - routing
+
+- name: Configure iBGP Route Map to redistribute connected Loopbacks
+  cisco.ios.ios_route_maps:
+    config:
+      - route_map: redis_connected_bgp
+        entries:
+          - sequence: 10
+            action: permit
+            description: BGP Route map to distribute RFC1918-10 address loopbacks
+            match:
+              ip:
+                address:
+                  prefix_lists:
+                    - pl_RFC1918-10
+            set:
+              community:
+                no_export: true
+              # source_protocol:
+              #   connected: true
+    state: replaced
+  tags:
+    - routing
+    - bgp
+    - route-map
+    
+# Peer with Loopback addresses on iBGP
+- name: Configure iBGP mesh for all routers in asn
+  cisco.ios.ios_bgp_global:
+    config:
+      as_number: "{{ local_asn }}"
+      bgp:
+        router_id:
+          address: "{{ router_id }}"
+        log_neighbor_changes: true
+        cluster_id: "{{ router_id }}"
+      maximum_paths:
+        paths: 2
+      redistribute:
+        - connected:
+            set: true
+            route_map: redis_connected_bgp
+      neighbors: 
+        - neighbor_address: "{{ hostvars[item].router_id }}"
+          remote_as: "{{ local_asn }}"
+          update_source: "{{ router_id_interface }}"
+          send_community:
+            both: true
+          description: "{{ item }}"
+          route_reflector_client: true
+    state: merged
+  loop: "{{ groups[dagroup] }}"
+  when: inventory_hostname != item
+  vars:
+    - dagroup: "asn{{local_asn | string }}"
+  tags:
+    - routing
+    - ibgp
+    - bgp
+
+# Peer with PtP addresses for eBGP
+- name: Configure eBGP Neighbors on interfaces
+  cisco.ios.ios_bgp_global:
+    config:
+      as_number: "{{ local_asn }}"
+      auto_summary: false
+      bgp:
+        router_id:
+          address: "{{ router_id }}"
+        log_neighbor_changes: true
+      redistribute:
+        - connected:
+            set: true
+        - static:
+            set: true
+      maximum_paths:
+        paths: 2      
+      neighbors: 
+        - neighbor_address: "{{ item.address | ansible.utils.ipaddr('peer') }}"
+          remote_as: "{{ item.remote_asn }}"
+          update_source: "{{ item.name }}"
+          send_community:
+            both: true
+          description: "{{ item.description }}"
+          soft_reconfiguration: true
+      networks:
+        - address: "10.{{ rid }}.0.0"
+          netmask: 255.255.255.0
+        - address: "10.{{ rid }}.1.0"
+          netmask: 255.255.255.0
+        - address: "10.{{ rid }}.2.0"
+          netmask: 255.255.255.0
+        - address: "10.{{ rid }}.3.0"
+          netmask: 255.255.255.0
+        - address: "10.{{ rid }}.4.0"
+          netmask: 255.255.255.0
+        - address: "10.{{ rid }}.5.0"
+          netmask: 255.255.255.0
+        - address: "10.{{ rid }}.6.0"
+          netmask: 255.255.255.0
+        - address: "10.{{ rid }}.7.0"
+          netmask: 255.255.255.0
+        - address: "10.{{ rid }}.9.0"
+          netmask: 255.255.255.0
+        - address: "10.{{ rid }}.10.0"
+          netmask: 255.255.255.0
+        - address: "10.{{ rid }}.10.0"
+          netmask: 255.255.255.0
+    state: merged
+  loop: "{{ interfaces | selectattr('ebgp_enabled', 'defined') | list }}"
+  vars:
+    - rid: "{{  10 * ( inventory_hostname | regex_replace('R', '') | int)  }}"
+  tags:
+    - routing
+    - ebgp
+    - bgp
