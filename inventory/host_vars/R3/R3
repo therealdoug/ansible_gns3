@@ -1,3 +1,4 @@
 ---
 router_id: 172.31.255.3
 ansible_host: R3.lan
+summary_address: 10.30.0.0/16

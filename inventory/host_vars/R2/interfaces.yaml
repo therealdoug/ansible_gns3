@@ -3,23 +3,28 @@ interfaces:
   - name: GigabitEthernet1/0
     description: "WAN|1G|R1|Gi1/0"
     address: 172.31.254.1/31
-    bgp_enabled: true
+    ospf: true
   - name: GigabitEthernet2/0
     description: "WAN|1G|R3|Gi1/0"
     address: 172.31.254.4/31
-    bgp_enabled: true
+    ospf: true
   - name: GigabitEthernet3/0
     description: "WAN|1G|R4|Gi2/0"
     address: 172.31.254.8/31
-    bgp_enabled: true
+    ospf: true
 ##
   - name: Ethernet6/0
     address: 172.31.254.12/31
     description: "WAN|1G|R5|Gi6/0"
     remote_asn: 400065100
-    bgp_enabled: true
+    ebgp_enabled: true
   - name: Ethernet6/1
     address: 172.31.254.18/31
     description: "WAN|1G|R6|Gi6/1"
     remote_asn: 400065100
-    bgp_enabled: true
+    ebgp_enabled: true
+  - name: Ethernet6/2
+    address: 172.31.254.22/31
+    description: "WAN|1G|R7|Gi2/0"
+    remote_asn: 400065200
+    ebgp_enabled: true
