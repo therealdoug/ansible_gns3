@@ -1,0 +1,29 @@
+---
+- name: Configure iBGP Route Map to redistribute connected Loopbacks
+  cisco.ios.ios_route_maps:
+    config:
+      - route_map: redis_connected_bgp
+        entries:
+          - sequence: 10
+            action: permit
+            description: BGP Route map to distribute RFC1918-10 address loopbacks
+            match:
+              ip:
+                address:
+                  prefix_lists:
+                    - pl_RFC1918-10
+            set:
+              community:
+                no_export: true
+    state: replaced
+  tags:
+    - routing
+    - bgp
+    - route-map
+
+- name: Include BGP Configuration Tasks
+  ansible.builtin.include_tasks: "tasks/core/{{ inventory_hostname }}_task_bgp.yaml"
+  tags:
+    - routing
+    - ibgp
+    - bgp

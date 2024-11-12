@@ -1,0 +1,42 @@
+{% set peer_list = groups['asn' + local_asn | string] | difference(inventory_hostname) | list %}
+---
+# Peer with Loopback addresses on iBGP
+- name: Configure iBGP mesh for all routers in asn
+  cisco.ios.ios_bgp_global:
+    config:
+      as_number: {{ local_asn }}
+      bgp:
+        router_id:
+          address: {{ router_id }}
+        log_neighbor_changes: true
+        cluster_id: {{ router_id }}
+      maximum_paths:
+        paths: 2
+      redistribute:
+        - connected:
+            set: true
+            route_map: redis_connected_bgp
+{% if (peer_list | length > 1) or (interfaces | selectattr('ebgp_enabled', 'defined') | list | length > 1) %}
+      neighbors:
+{% for ibgp_peer in peer_list %}
+        - neighbor_address: {{ hostvars[ibgp_peer].router_id }}
+          remote_as: {{ local_asn }}
+          update_source: {{ router_id_interface }}
+          send_community:
+            both: true
+{% endfor %}
+{% for ebgp_peer in interfaces | selectattr('ebgp_enabled', 'defined') | list %}
+        - neighbor_address: {{ ebgp_peer.address | ansible.utils.ipaddr('peer') }}
+          remote_as: {{ ebgp_peer.remote_asn }}
+          update_source: {{ ebgp_peer.name }}
+          send_community:
+            both: true
+          description: {{ ebgp_peer.description }}
+          soft_reconfiguration: true
+{% endfor %}
+{% endif %}
+    state: overridden
+  tags:
+    - routing
+    - ibgp
+    - bgp

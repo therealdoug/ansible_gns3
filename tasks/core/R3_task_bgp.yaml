@@ -1,0 +1,38 @@
+---
+# Peer with Loopback addresses on iBGP
+- name: Configure iBGP mesh for all routers in asn
+  cisco.ios.ios_bgp_global:
+    config:
+      as_number: 400065000
+      bgp:
+        router_id:
+          address: 172.31.255.3
+        log_neighbor_changes: true
+        cluster_id: 172.31.255.3
+      maximum_paths:
+        paths: 2
+      redistribute:
+        - connected:
+            set: true
+            # route_map: redis_connected_bgp
+      neighbors:
+        - neighbor_address: 172.31.255.1
+          remote_as: 400065000
+          update_source: Loopback1
+          send_community:
+            both: true
+        - neighbor_address: 172.31.255.2
+          remote_as: 400065000
+          update_source: Loopback1
+          send_community:
+            both: true
+        - neighbor_address: 172.31.255.4
+          remote_as: 400065000
+          update_source: Loopback1
+          send_community:
+            both: true
+    state: overridden
+  tags:
+    - routing
+    - ibgp
+    - bgp
