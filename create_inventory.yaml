@@ -17,11 +17,17 @@
         state: directory
       delegate_to: localhost  
 
+    - name: Create core task directories
+      ansible.builtin.file:
+        path: "tasks/core"
+        state: directory
+      delegate_to: localhost  
+
     - name: Create blank 'interfaces.yaml' file
       ansible.builtin.file:
         path: "inventory/host_vars/{{ inventory_hostname }}/interfaces.yaml"
         state: touch
-        
+
     # - name: Remove hostvars directories if host is removed
     #   ansible.builtin.file:
     #     path: "inventory/host_vars/{{ inventory_hostname }}"
@@ -33,3 +39,8 @@
       ansible.builtin.template:
         src: templates/inventory_router.j2
         dest: "inventory/host_vars/{{ inventory_hostname }}/{{ inventory_hostname }}"
+
+    - name: Create iBGP files
+      ansible.builtin.template:
+        src: templates/core_bgp.j2
+        dest: "tasks/core/{{ inventory_hostname }}_task_bgp.yaml"

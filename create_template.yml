@@ -35,6 +35,11 @@
       tags:
         - mgmt
 
+    - name: Enable new community format
+      cisco.ios.ios_config:
+        lines:
+          - "ip bgp-community new-format"
+
     - name: Configure FastEthernet0/0 for OOB MGMT
       cisco.ios.ios_l3_interfaces:
         config:
@@ -56,6 +61,20 @@
         state: replaced
       tags:
         - interfaces
+
+    - name: Configure Loopbacks for redistribution
+      cisco.ios.ios_l3_interfaces:
+        config:
+          - name: "Loopback{{ 10 + item | int }}"
+            ipv4:
+              - address: "10.{{ rid }}.{{ item }}.1/24"
+        state: merged
+      vars:
+        - rid: "{{ inventory_hostname | regex_replace('R', '') | int  }}"
+      loop: "{{ range(0, 9, 1) | list }}"
+      tags:
+        - interfaces
+        - loopbacks
 
     - name: Loop over other interfaces
       cisco.ios.ios_l3_interfaces:
@@ -88,6 +107,7 @@
                   - dest: "{{ summary_address }}"
                     next_hops:
                       - interface: Null0
+        state: merged
       tags:
         - routing
         - static_route
@@ -101,6 +121,7 @@
                   - dest: 192.0.2.1/32
                     next_hops:
                       - interface: Null0
+        state: merged
       tags:
         - routing
         - static_route
@@ -232,9 +253,10 @@
       tags:
         - ospf
 
-    - name: BGP Stuff
+    - name: Core BGP Stuff
       ansible.builtin.include_tasks:
-        file: tasks/bgp_tasks.yaml
+        file: tasks/core_bgp_tasks.yaml
+      # when: inventory_hostname in groups['asn400065000']
       tags:
         - bgp
         - ibgp
