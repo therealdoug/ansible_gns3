@@ -1,4 +1,4 @@
 ---
 router_id: 172.31.255.5
 ansible_host: R5.lan
-summary_address: 10.50.0.0/16
+summary_address: 10.5.0.0/16
