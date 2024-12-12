@@ -1,4 +1,12 @@
 ---
+- name: Enable new community format
+  cisco.ios.ios_config:
+    lines:
+      - "ip bgp-community new-format"
+  tags:
+    - bgp
+    - routing
+
 - name: Configure iBGP Route Map to redistribute connected Loopbacks
   cisco.ios.ios_route_maps:
     config:
@@ -15,7 +23,7 @@
             set:
               community:
                 no_export: true
-    state: replaced
+    state: overridden
   tags:
     - routing
     - bgp

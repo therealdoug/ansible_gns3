@@ -15,7 +15,7 @@
         - connected:
             set: true
             route_map: redis_connected_bgp
-      neighbors: 
+      neighbors:
         - neighbor_address: 172.31.254.20
           remote_as: 400065000
           update_source: GigabitEthernet1/0

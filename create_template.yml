@@ -1,7 +1,7 @@
 ---
 - name: Create Cisco Router Template
-  # hosts: asn400065000
-  hosts: all
+  hosts: asn400065000
+  # hosts: all
   # hosts: R1
   gather_facts: false
   connection: ansible.netcommon.network_cli
@@ -23,22 +23,27 @@
           - end
       tags:
         - mgmt
+        - system
 
     - name: Disable Un-needed Services
       cisco.ios.ios_service:
         config:
           compress_config: true
+          dhcp: false
+          password_encryption: true
           tcp_small_servers:
             enable: false
           udp_small_servers:
             enable: false
       tags:
         - mgmt
+        - system
 
-    - name: Enable new community format
-      cisco.ios.ios_config:
-        lines:
-          - "ip bgp-community new-format"
+    - name: System Settings
+      cisco.ios.ios_system:
+        lookup_enabled: false
+      tags:
+        - system
 
     - name: Configure FastEthernet0/0 for OOB MGMT
       cisco.ios.ios_l3_interfaces:
@@ -67,7 +72,7 @@
         config:
           - name: "Loopback{{ 10 + item | int }}"
             ipv4:
-              - address: "10.{{ rid }}.{{ item }}.1/24"
+              - address: "{{ summary_address | ansible.utils.ipsubnet(24, item) | ansible.utils.ipaddr('1') }}"
         state: merged
       vars:
         - rid: "{{ inventory_hostname | regex_replace('R', '') | int  }}"
@@ -220,32 +225,38 @@
             - process_id: "{{ ospf_pid }}"
               areas:
                 - area_id: "{{ ospf_area }}"
+              network:
+                - address: "{{ p2p_network | ansible.utils.ipaddr('network') }}"
+                  area: "{{ ospf_area }}"
+                  wildcard_bits: "{{ p2p_network | ansible.utils.ipaddr('hostmask') }}"
+                - address: "{{ loopback_network | ansible.utils.ipaddr('network') }}"
+                  area: "{{ ospf_area }}"
+                  wildcard_bits: "{{ loopback_network | ansible.utils.ipaddr('hostmask') }}"
               router_id: "{{ router_id }}"
+              maximum_paths: 4
         state: replaced
       tags:
         - routing
         - ospf
 
-    - name: Configure redistribution of connected routes into ospf [HACK]
-      cisco.ios.ios_command:
-        commands:
-          - "conf t"
-          - "router ospf {{ ospf_pid }}"
-          - "redistribute connected subnets route-map redis_connected_ospf"
-          - "end"
-      tags:
-        - routing
-        - ospf
+    # - name: Configure redistribution of connected routes into ospf [HACK]
+    #   cisco.ios.ios_command:
+    #     commands:
+    #       - "conf t"
+    #       - "router ospf {{ ospf_pid }}"
+    #       # - "no redistribute connected subnets route-map redis_connected_ospf"
+    #       - "no redistribute connected"
+    #       - "end"
+    #   tags:
+    #     - routing
+    #     - ospf
 
-    - name: Enable OSPF on Interfaces
+    - name: Set Point-to-Point Links as OSPF Point-to-Point
       cisco.ios.ios_ospf_interfaces:
         config:
           - name: "{{ item.name }}"
             address_family:
               - afi: ipv4
-                process:
-                  id: "{{ ospf_pid }}"
-                  area_id: "{{ ospf_area }}"
                 network:
                   point_to_point: true
         state: merged

@@ -14,7 +14,7 @@
       redistribute:
         - connected:
             set: true
-            # route_map: redis_connected_bgp
+            route_map: redis_connected_bgp
       neighbors:
         - neighbor_address: 172.31.255.1
           remote_as: 400065000
